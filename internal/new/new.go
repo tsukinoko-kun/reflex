@@ -114,6 +114,7 @@ func New() error {
 		DevDependencies: map[string]string{
 			"@types/react":     "^19.1.2",
 			"@types/react-dom": "^19.1.2",
+			"@biomejs/biome":   "1.9.4",
 		},
 	}); err != nil {
 		return fmt.Errorf("failed to write package.json: %w", err)

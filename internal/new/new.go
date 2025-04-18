@@ -108,8 +108,10 @@ func New() error {
 		Name:    "reflex",
 		Scripts: map[string]string{"dev": "reflex dev", "build": "reflex build", "lint": "reflex lint"},
 		Dependencies: map[string]string{
-			"react":     "^19.1.0",
-			"react-dom": "^19.1.0",
+			"@tailwindcss/cli": "^4.1.4",
+			"react":            "^19.1.0",
+			"react-dom":        "^19.1.0",
+			"tailwindcss":      "^4.1.4",
 		},
 		DevDependencies: map[string]string{
 			"@types/react":     "^19.1.2",

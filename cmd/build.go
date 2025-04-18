@@ -17,6 +17,11 @@ var buildCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
+		if err := build.Style(); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	},
 }
 

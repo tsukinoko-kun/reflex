@@ -23,6 +23,7 @@ var initCmd = &cobra.Command{
 		_ = lint.Format()
 
 		_ = build.Bundle()
+		_ = build.Style()
 	},
 }
 

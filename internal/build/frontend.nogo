@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//go:embed *.js
+//go:embed *.js *.css
 var efs embed.FS
 
 const template = `<!DOCTYPE html>
@@ -38,6 +38,25 @@ func Handler(w http.ResponseWriter, r *http.Request) (handled bool) {
 		defer f.Close()
 
 		w.Header().Set("Content-Type", "application/javascript")
+
+		// set cache control header to 4 hours
+		w.Header().Set("Cache-Control", "max-age=14400")
+
+		if _, err := io.Copy(w, f); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		return
+	} else if strings.HasSuffix(name, ".css") {
+		f, err := efs.Open(name)
+		if err != nil {
+			return
+		}
+		handled = true
+		defer f.Close()
+
+		w.Header().Set("Content-Type", "text/css")
 
 		// set cache control header to 4 hours
 		w.Header().Set("Cache-Control", "max-age=14400")

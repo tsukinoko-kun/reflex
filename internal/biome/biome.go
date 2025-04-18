@@ -53,7 +53,9 @@ func Default(out string) *Configuration {
 				UnsafeParameterDecoratorsEnabled: false,
 			},
 			JsxRuntime: "transparent",
-			Linter:     &JavascriptLinter{},
+			Linter: &JavascriptLinter{
+				Enabled: true,
+			},
 		},
 		JSON: &JsonConfiguration{
 			Parser: &JsonParser{
@@ -68,7 +70,10 @@ func Default(out string) *Configuration {
 			Enabled: true,
 			Rules: map[string]any{
 				"recommended": true,
-				"suspicious":  all,
+				"suspicious": map[string]any{
+					"all":                  true,
+					"noReactSpecificProps": false,
+				},
 				"correctness": all,
 				"style": map[string]any{
 					"all":             true,
@@ -78,6 +83,14 @@ func Default(out string) *Configuration {
 				"performance": all,
 				"security":    all,
 				"a11y":        all,
+				"nursery": map[string]any{
+					"useSortedClasses":               true,
+					"noCommonJs":                     true,
+					"noDuplicateElseIf":              true,
+					"noDuplicateProperties":          true,
+					"noDuplicatedFields":             true,
+					"noDynamicNamespaceImportAccess": true,
+				},
 			},
 		},
 		OrganizeImports: &OrganizeImports{
@@ -234,7 +247,7 @@ type JavascriptLinter struct {
 type JavascriptOrganizeImports struct{}
 
 type JavascriptParser struct {
-	UnsafeParameterDecoratorsEnabled bool `json:"unsafeParameterDecoratorsEnabled,omitempty"`
+	UnsafeParameterDecoratorsEnabled bool `json:"unsafeParameterDecoratorsEnabled"`
 }
 
 type JsonConfiguration struct {

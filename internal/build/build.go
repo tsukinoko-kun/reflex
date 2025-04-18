@@ -12,6 +12,7 @@ import (
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/goccy/go-yaml"
 	"github.com/tsukinoko-kun/reflex/internal/config"
+	"github.com/tsukinoko-kun/reflex/internal/pacman"
 )
 
 var jsExtensions = []string{".js", ".jsx", ".ts", ".tsx"}
@@ -132,5 +133,39 @@ root.render(<StrictMode><App /></StrictMode>);
 	if err != nil {
 		return fmt.Errorf("error walking the frontend directory: %v", err)
 	}
+	return nil
+}
+
+func Style() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %v", err)
+	}
+
+	configFile, err := os.Open(filepath.Join(wd, "reflex.yaml"))
+	if err != nil {
+		return fmt.Errorf("failed to open config file: %v", err)
+	}
+
+	var conf config.Config
+	if err := yaml.NewDecoder(configFile).Decode(&conf); err != nil {
+		_ = configFile.Close()
+		return fmt.Errorf("failed to decode config file: %v", err)
+	}
+	_ = configFile.Close()
+
+	npm, err := pacman.DetectNodePackageManager()
+	if err != nil {
+		return fmt.Errorf("failed to detect node package manager: %v", err)
+	}
+
+	if err := npm.Exec(
+		"tailwindcss",
+		"-i", filepath.Join(wd, conf.FrontendDir, "style.css"),
+		"-o", filepath.Join(wd, conf.OutputDir, "frontend", "style.css"),
+	); err != nil {
+		return fmt.Errorf("failed to build style.css with tailwindcss: %v", err)
+	}
+
 	return nil
 }

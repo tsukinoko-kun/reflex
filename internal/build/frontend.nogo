@@ -2,28 +2,76 @@ package frontend
 
 import (
 	"embed"
+	"fmt"
 	"io"
 	"net/http"
+	unixpath "path"
+	"strings"
 )
 
 //go:embed *.js
 var efs embed.FS
 
-func Handler(w http.ResponseWriter, r *http.Request) bool {
-	f, err := efs.Open(r.URL.Path[1:])
-	if err != nil {
-		return false
+const template = `<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Reflex</title>
+	<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+	<div id="root"></div>
+	<script type="module" src="%s"></script>
+</body>
+</html>
+`
+
+func Handler(w http.ResponseWriter, r *http.Request) (handled bool) {
+	name := strings.TrimSuffix(r.URL.Path[1:], "/")
+
+	if strings.HasSuffix(name, ".js") {
+		f, err := efs.Open(name)
+		if err != nil {
+			return
+		}
+		handled = true
+		defer f.Close()
+
+		w.Header().Set("Content-Type", "application/javascript")
+
+		// set cache control header to 4 hours
+		w.Header().Set("Cache-Control", "max-age=14400")
+
+		if _, err := io.Copy(w, f); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		return
+	} else {
+		if name == "" {
+			name = "index"
+		}
+		if _, err := efs.Open(name + ".js"); err != nil {
+			indexJsName := unixpath.Join(name, "index.js")
+			if _, err := efs.Open(indexJsName); err != nil {
+				name = indexJsName
+			} else {
+				return
+			}
+		}
+
+		handled = true
+
+		w.Header().Set("Content-Type", "text/html")
+		// set cache control header to 4 hours
+		w.Header().Set("Cache-Control", "max-age=14400")
+
+		if _, err := io.WriteString(w, fmt.Sprintf(template, "/"+name+".js")); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		return
 	}
-	defer f.Close()
-
-	w.Header().Set("Content-Type", "application/javascript")
-
-	// set cache control header to 4 hours
-	w.Header().Set("Cache-Control", "max-age=14400")
-
-	if _, err := io.Copy(w, f); err != nil {
-		return false
-	}
-
-	return true
 }

@@ -66,15 +66,13 @@ func Bundle() error {
 
 		userImportPath := "./" + filepath.ToSlash(rel)
 
-		wrapperContent := `import React from 'react';
-import ReactDOM from 'react-dom';
-import Component from '` + userImportPath + `';
-
-ReactDOM.render(
-  <Component />,
-  document.getElementById('root')
-);
-`
+		wrapperContent := fmt.Sprintf(`import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
+import React from "react";
+import App from %q;
+const root = createRoot(document.getElementById('root'));
+root.render(<StrictMode><App /></StrictMode>);
+`, userImportPath)
 
 		bundleFileName := strings.TrimSuffix(rel, ext) + ".js"
 		outFilePath := filepath.Join(outputDir, filepath.FromSlash(bundleFileName))
@@ -84,8 +82,11 @@ ReactDOM.render(
 		}
 
 		result := esbuild.Build(esbuild.BuildOptions{
-			Bundle: true,
-			Write:  false,
+			Bundle:   true,
+			Write:    false,
+			Platform: esbuild.PlatformBrowser,
+			Format:   esbuild.FormatESModule,
+			JSX:      esbuild.JSXAutomatic,
 			Stdin: &esbuild.StdinOptions{
 				Contents:   wrapperContent,
 				ResolveDir: frontendDir,

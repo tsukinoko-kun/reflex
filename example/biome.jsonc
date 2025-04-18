@@ -73,12 +73,12 @@
 				"all": true
 			},
 			"nursery": {
-				"noCommonJs": true,
-				"noDuplicateElseIf": true,
-				"noDuplicateProperties": true,
-				"noDuplicatedFields": true,
-				"noDynamicNamespaceImportAccess": true,
-				"useSortedClasses": true
+				"noCommonJs": "error",
+				"noDuplicateElseIf": "warn",
+				"noDuplicateProperties": "error",
+				"noDuplicatedFields": "error",
+				"noDynamicNamespaceImportAccess": "warn",
+				"useSortedClasses": "error"
 			},
 			"performance": {
 				"all": true
@@ -93,7 +93,7 @@
 			},
 			"suspicious": {
 				"all": true,
-				"noReactSpecificProps": false
+				"noReactSpecificProps": "off"
 			}
 		}
 	},

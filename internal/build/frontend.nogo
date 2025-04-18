@@ -1,0 +1,29 @@
+package frontend
+
+import (
+	"embed"
+	"io"
+	"net/http"
+)
+
+//go:embed *.js
+var efs embed.FS
+
+func Handler(w http.ResponseWriter, r *http.Request) bool {
+	f, err := efs.Open(r.URL.Path[1:])
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	w.Header().Set("Content-Type", "application/javascript")
+
+	// set cache control header to 4 hours
+	w.Header().Set("Cache-Control", "max-age=14400")
+
+	if _, err := io.Copy(w, f); err != nil {
+		return false
+	}
+
+	return true
+}

@@ -1,6 +1,7 @@
 package build
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -15,13 +16,16 @@ import (
 
 var jsExtensions = []string{".js", ".jsx", ".ts", ".tsx"}
 
+//go:embed frontend.nogo
+var frontend_go []byte
+
 func Bundle() error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %v", err)
 	}
 
-	configFile, err := os.Open(filepath.Join(wd, "instinct.yaml"))
+	configFile, err := os.Open(filepath.Join(wd, "reflex.yaml"))
 	if err != nil {
 		return fmt.Errorf("failed to open config file: %v", err)
 	}
@@ -33,7 +37,7 @@ func Bundle() error {
 	}
 	_ = configFile.Close()
 
-	frontendDir := filepath.Join(wd, conf.FrontendDir)
+	frontendDir := filepath.Join(wd, conf.FrontendDir, "routes")
 	outputDir := filepath.Join(wd, conf.OutputDir, "frontend")
 	_ = os.RemoveAll(outputDir)
 
@@ -118,6 +122,11 @@ ReactDOM.render(
 
 		return nil
 	})
+
+	// write frontend.go
+	if err := os.WriteFile(filepath.Join(wd, conf.OutputDir, "frontend", "frontend.go"), frontend_go, 0644); err != nil {
+		fmt.Printf("failed to write frontend.go: %v", err)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error walking the frontend directory: %v", err)

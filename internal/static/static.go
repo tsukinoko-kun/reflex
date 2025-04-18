@@ -17,6 +17,9 @@ var (
 
 	//go:embed backend/*
 	backend embed.FS
+
+	//go:embed public/*
+	public embed.FS
 )
 
 func WriteContentTo(out string) error {
@@ -29,6 +32,10 @@ func WriteFrontendTo(out string) error {
 
 func WriteBackendTo(out string) error {
 	return writeTo(backend, "backend", out)
+}
+
+func WritePublicTo(out string) error {
+	return writeTo(public, "public", out)
 }
 
 func writeTo(efs fs.FS, root string, out string) error {

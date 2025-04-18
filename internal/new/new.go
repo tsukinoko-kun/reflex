@@ -13,14 +13,11 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/goccy/go-yaml"
+	"github.com/tsukinoko-kun/reflex/internal/biome"
 	"github.com/tsukinoko-kun/reflex/internal/config"
+	"github.com/tsukinoko-kun/reflex/internal/pacman"
 	"github.com/tsukinoko-kun/reflex/internal/static"
-)
-
-const (
-	npm uint8 = iota
-	pnpm
-	yarn
+	"github.com/tsukinoko-kun/reflex/internal/tsconfig"
 )
 
 type nodePackage struct {
@@ -41,7 +38,7 @@ var (
 
 func New() error {
 	title := "example"
-	pacman := npm
+	npm := pacman.NPM
 	srcDir := true
 	location, err := os.Getwd()
 
@@ -70,13 +67,14 @@ func New() error {
 			FileAllowed(false).
 			Title("Location").
 			Value(&location),
-		huh.NewSelect[uint8]().
+		huh.NewSelect[pacman.NodePacman]().
 			Title("Node package manager").
-			Value(&pacman).
+			Value(&npm).
 			Options(
-				huh.NewOption("npm", npm),
-				huh.NewOption("pnpm", pnpm),
-				huh.NewOption("yarn", yarn),
+				huh.NewOption("npm", pacman.NPM),
+				huh.NewOption("pnpm", pacman.PNPM),
+				huh.NewOption("yarn", pacman.YARN),
+				huh.NewOption("bun", pacman.BUN),
 			),
 		huh.NewConfirm().
 			Title("Use src directory").
@@ -95,13 +93,15 @@ func New() error {
 	if srcDir {
 		conf.FrontendDir = "src/frontend"
 		conf.BackendDir = "src/backend"
+		conf.PublicDir = "src/public"
 	} else {
 		conf.FrontendDir = "frontend"
 		conf.BackendDir = "backend"
+		conf.PublicDir = "public"
 	}
 
-	if err := writeInstinctConfig(conf); err != nil {
-		return fmt.Errorf("failed to write instinct config: %w", err)
+	if err := writeReflexConfig(conf); err != nil {
+		return fmt.Errorf("failed to write reflex config: %w", err)
 	}
 
 	if err := writePackageJson(nodePackage{
@@ -124,13 +124,15 @@ func New() error {
 	readme.WriteString("# ")
 	readme.WriteString(title)
 	readme.WriteString("\n\n## Install dependencies\n\n[Reflex](https://github.com/tsukinoko-kun/reflex)\n\n```shell\n")
-	switch pacman {
-	case npm:
+	switch npm {
+	case pacman.NPM:
 		readme.WriteString("npm install")
-	case yarn:
+	case pacman.YARN:
 		readme.WriteString("yarn install")
-	case pnpm:
+	case pacman.PNPM:
 		readme.WriteString("pnpm install")
+	case pacman.BUN:
+		readme.WriteString("bun install")
 	}
 	readme.WriteString("\n```\n")
 
@@ -144,22 +146,54 @@ func New() error {
 	gitignore.WriteString(".vscode/\n")
 	gitignore.WriteString("node_modules/\n")
 	gitignore.WriteString(conf.OutputDir + "/\n")
-	switch pacman {
-	case npm:
+	switch npm {
+	case pacman.NPM:
 		gitignore.WriteString("pnpm-lock.yaml\n")
 		gitignore.WriteString("pnpm-workspace.yaml\n")
 		gitignore.WriteString("yarn.lock\n")
-	case yarn:
+		gitignore.WriteString("bun.lockb\n")
+	case pacman.YARN:
 		gitignore.WriteString("pnpm-lock.yaml\n")
 		gitignore.WriteString("pnpm-workspace.yaml\n")
 		gitignore.WriteString("package-lock.json\n")
-	case pnpm:
+		gitignore.WriteString("bun.lockb\n")
+	case pacman.PNPM:
 		gitignore.WriteString("yarn.lock\n")
 		gitignore.WriteString("package-lock.json\n")
+		gitignore.WriteString("bun.lockb\n")
+	case pacman.BUN:
+		gitignore.WriteString("pnpm-lock.yaml\n")
+		gitignore.WriteString("pnpm-workspace.yaml\n")
+		gitignore.WriteString("package-lock.json\n")
+		gitignore.WriteString("yarn.lock\n")
 	}
 
 	if err := writeStringToFile(".gitignore", gitignore.String()); err != nil {
 		return fmt.Errorf("failed to write .gitignore: %w", err)
+	}
+
+	if f, err := os.Create(filepath.Join(location, "biome.jsonc")); err != nil {
+		return fmt.Errorf("failed to create biome.jsonc: %w", err)
+	} else {
+		defer f.Close()
+		biome := biome.Default(conf.OutputDir)
+		je := json.NewEncoder(f)
+		je.SetIndent("", "\t")
+		if err := je.Encode(biome); err != nil {
+			return fmt.Errorf("failed to encode biome.jsonc: %w", err)
+		}
+	}
+
+	if f, err := os.Create(filepath.Join(location, "tsconfig.json")); err != nil {
+		return fmt.Errorf("failed to create tsconfig.json: %w", err)
+	} else {
+		defer f.Close()
+		tsconfig := tsconfig.Default(conf.OutputDir)
+		je := json.NewEncoder(f)
+		je.SetIndent("", "\t")
+		if err := je.Encode(tsconfig); err != nil {
+			return fmt.Errorf("failed to encode tsconfig.json: %w", err)
+		}
 	}
 
 	if err := static.WriteContentTo(location); err != nil {
@@ -173,27 +207,35 @@ func New() error {
 	if err := static.WriteBackendTo(filepath.Join(location, conf.BackendDir)); err != nil {
 		return fmt.Errorf("failed to write backend files: %w", err)
 	}
-
-	var cmd *exec.Cmd
-	switch pacman {
-	case npm:
-		cmd = exec.Command("npm", "install")
-	case yarn:
-		cmd = exec.Command("yarn", "install")
-	case pnpm:
-		cmd = exec.Command("pnpm", "install")
-	}
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to run command: %w", err)
+	if err := writeStringToFile(filepath.Join(location, conf.BackendDir, "main.go"), mainGo(mainGoData{
+		Title:      title,
+		BackendDir: conf.BackendDir,
+		PublicDir:  conf.PublicDir,
+		OutDir:     conf.OutputDir,
+	})); err != nil {
+		return fmt.Errorf("failed to write main.go to backend: %w", err)
 	}
 
-	cmd = exec.Command("go", "mod", "init", title)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to run command: %w", err)
+	if err := static.WritePublicTo(filepath.Join(location, conf.PublicDir)); err != nil {
+		return fmt.Errorf("failed to write public files: %w", err)
 	}
-	cmd = exec.Command("go", "mod", "tidy", title)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to run command: %w", err)
+
+	if err := npm.InstallDependencies(); err != nil {
+		return fmt.Errorf("failed to install dependencies: %w", err)
+	}
+
+	{
+		cmd := exec.Command("go", "mod", "init", title)
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to initialize go module: %w", err)
+		}
+	}
+
+	{
+		cmd := exec.Command("go", "mod", "tidy")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to tidy go module: %w", err)
+		}
 	}
 
 	return nil
@@ -213,8 +255,8 @@ func writeStringToFile(filename string, content string) error {
 	return nil
 }
 
-func writeInstinctConfig(conf config.Config) error {
-	f, err := os.Create("instinct.yaml")
+func writeReflexConfig(conf config.Config) error {
+	f, err := os.Create("reflex.yaml")
 	if err != nil {
 		return fmt.Errorf("failed to create config file: %w", err)
 	}

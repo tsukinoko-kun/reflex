@@ -1,4 +1,19 @@
-package main
+package new
+
+import (
+	"bytes"
+	"text/template"
+)
+
+type mainGoData struct {
+	Title      string
+	BackendDir string
+	PublicDir  string
+	OutDir     string
+}
+
+func mainGo(data mainGoData) string {
+	tmpl := `package main
 
 import (
 	"fmt"
@@ -9,9 +24,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"example/out/frontend"
-	"example/src/backend/config"
-	"example/src/public"
+	"{{.Title}}/{{.OutDir}}/frontend"
+	"{{.Title}}/{{.BackendDir}}/config"
+	"{{.Title}}/{{.PublicDir}}"
 )
 
 func main() {
@@ -42,4 +57,12 @@ func router(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Hello, World!")
+}
+`
+	t := template.Must(template.New("main").Parse(tmpl))
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return ""
+	}
+	return buf.String()
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukinoko-kun/reflex/internal/build"
+	"github.com/tsukinoko-kun/reflex/internal/lint"
 	"github.com/tsukinoko-kun/reflex/internal/new"
 )
 
@@ -17,6 +19,10 @@ var initCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
+		_ = lint.Format()
+
+		_ = build.Bundle()
 	},
 }
 

@@ -1,3 +1,4 @@
 frontend: src/frontend
 backend: src/backend
+public: src/public
 output: out

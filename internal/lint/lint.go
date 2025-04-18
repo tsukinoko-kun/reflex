@@ -51,18 +51,26 @@ func Run(fix bool) error {
 	// is biome configured?
 	if exists(dirEntries, biomeConfigFileNames) {
 		if fix {
-			npm.Exec("biome", "check", "--write")
+			if err := npm.Exec("biome", "check", "--write", "--unsafe"); err != nil {
+				return fmt.Errorf("failed to lint with biome: %w", err)
+			}
 		} else {
-			npm.Exec("biome", "check")
+			if err := npm.Exec("biome", "check"); err != nil {
+				return fmt.Errorf("failed to lint with biome: %w", err)
+			}
 		}
 	}
 
 	// is eslint configured?
 	if exists(dirEntries, eslintConfigFileNames) {
 		if fix {
-			npm.Exec("eslint", "--fix")
+			if err := npm.Exec("eslint", "--fix"); err != nil {
+				return fmt.Errorf("failed to lint with eslint: %w", err)
+			}
 		} else {
-			npm.Exec("eslint")
+			if err := npm.ExecSilent("eslint"); err != nil {
+				return fmt.Errorf("failed to lint with eslint: %w", err)
+			}
 		}
 	}
 

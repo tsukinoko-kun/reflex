@@ -13,10 +13,7 @@
 		}
 	},
 	"files": {
-		"ignore": [
-			"node_modules",
-			"out"
-		]
+		"ignore": ["node_modules", "out"]
 	},
 	"formatter": {
 		"enabled": true,

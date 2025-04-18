@@ -72,7 +72,7 @@ func Default(out string) *Configuration {
 				"recommended": true,
 				"suspicious": map[string]any{
 					"all":                  true,
-					"noReactSpecificProps": false,
+					"noReactSpecificProps": "off",
 				},
 				"correctness": all,
 				"style": map[string]any{
@@ -84,12 +84,12 @@ func Default(out string) *Configuration {
 				"security":    all,
 				"a11y":        all,
 				"nursery": map[string]any{
-					"useSortedClasses":               true,
-					"noCommonJs":                     true,
-					"noDuplicateElseIf":              true,
-					"noDuplicateProperties":          true,
-					"noDuplicatedFields":             true,
-					"noDynamicNamespaceImportAccess": true,
+					"useSortedClasses":               "error",
+					"noCommonJs":                     "error",
+					"noDuplicateElseIf":              "warn",
+					"noDuplicateProperties":          "error",
+					"noDuplicatedFields":             "error",
+					"noDynamicNamespaceImportAccess": "warn",
 				},
 			},
 		},

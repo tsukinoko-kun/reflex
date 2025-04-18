@@ -159,7 +159,7 @@ func Style() error {
 		return fmt.Errorf("failed to detect node package manager: %v", err)
 	}
 
-	if err := npm.Exec(
+	if err := npm.ExecSilent(
 		"tailwindcss",
 		"-i", filepath.Join(wd, conf.FrontendDir, "style.css"),
 		"-o", filepath.Join(wd, conf.OutputDir, "frontend", "style.css"),

@@ -1,0 +1,3 @@
+frontend: src/frontend
+backend: src/backend
+output: out

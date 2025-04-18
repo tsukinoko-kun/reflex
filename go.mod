@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/evanw/esbuild v0.25.2
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/goccy/go-yaml v1.17.1
 	github.com/spf13/cobra v1.9.1
 )
@@ -36,6 +37,6 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 )

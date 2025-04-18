@@ -26,6 +26,8 @@ func main() {
 	defer fmt.Println("reflex exit")
 	defer sock.Close()
 
+	fmt.Printf("Listening on %s\n", sock.Addr())
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", router)
 	go http.Serve(sock, mux)

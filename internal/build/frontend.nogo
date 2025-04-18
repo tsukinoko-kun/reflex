@@ -73,7 +73,7 @@ func Handler(w http.ResponseWriter, r *http.Request) (handled bool) {
 		}
 		if _, err := efs.Open(name + ".js"); err != nil {
 			indexJsName := unixpath.Join(name, "index.js")
-			if _, err := efs.Open(indexJsName); err != nil {
+			if _, err := efs.Open(indexJsName); err == nil {
 				name = indexJsName
 			} else {
 				return

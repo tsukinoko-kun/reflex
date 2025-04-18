@@ -42,7 +42,7 @@ func Default(out string) *Configuration {
 		},
 		JavaScript: &JavascriptConfiguration{
 			Formatter: &JavascriptFormatter{
-				QuoteStyle:       "single",
+				QuoteStyle:       "double",
 				JsxQuoteStyle:    "double",
 				QuoteProperties:  "asNeeded",
 				TrailingCommas:   "all",
